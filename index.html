@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Agency System — Secure Terminal</title>
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#121212" />
+
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="locked">
+  <main id="login-screen" class="screen">
+    <div class="login-wrap">
+      <div class="logo-container">
+        <h1 class="agency-title">AGENCY</h1>
+        <p class="tagline">SECURE ACCESS TERMINAL</p>
+      </div>
+
+      <div class="auth-card">
+        <p class="auth-message" id="authMessage">ACCESS CODE REQUIRED</p>
+        <div class="password-display" id="passwordDisplay"></div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <button id="authenticateBtn" class="auth-btn">TAP TO AUTHENTICATE</button>
+      </div>
+      <p class="login-footer">All data is encrypted and monitored. Unauthorized access is prohibited.</p>
+    </div>
+  </main>
+
+  <main id="dashboard" class="screen hidden">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-name">AGENCY</span>
+        <span class="user-info">Agent ID: <span id="displayName">Agent</span></span>
+      </div>
+      <div class="top-actions">
+        <button id="notifBtn" class="icon-btn">
+          <span class="icon">🔔</span> <span id="notif-count" class="badge hidden">0</span>
+        </button>
+        <button id="settingsBtn" class="icon-btn"><span class="icon">⚙️</span></button>
+      </div>
+    </header>
+
+    <section class="viewport">
+      <aside class="sidebar">
+        <nav class="tools">
+          <button class="tool-btn active" data-tool="map"><span class="tool-icon">🗺️</span><span class="tool-text">Map</span></button>
+          <button class="tool-btn" data-tool="tasks"><span class="tool-icon">📋</span><span class="tool-text">Tasks</span></button>
+          <button class="tool-btn" data-tool="mail"><span class="tool-icon">📧</span><span class="tool-text">Mail</span></button>
+          <button class="tool-btn" data-tool="contacts"><span class="tool-icon">👥</span><span class="tool-text">Contacts</span></button>
+          <button class="tool-btn" data-tool="database"><span class="tool-icon">🗄️</span><span class="tool-text">Database</span></button>
+          <button class="tool-btn" data-tool="control"><span class="tool-icon">📡</span><span class="tool-text">Control</span></button>
+          <button class="tool-btn" data-tool="tools"><span class="tool-icon">🔧</span><span class="tool-text">Tools</span></button>
+          <button class="tool-btn" data-tool="settings"><span class="tool-icon">⚙️</span><span class="tool-text">Settings</span></button>
+        </nav>
+        <div class="status-panel">
+          <p class="status-text">SYSTEM STATUS: <span class="status-indicator online">ONLINE</span></p>
+          <div class="toggle-row">
+            <label>VPN</label>
+            <label class="switch"><input id="vpnToggle" type="checkbox"><span class="slider"></span></label>
+          </div>
+          <p class="status-text">Simulated IP: <span id="ipDisplay">0.0.0.0</span></p>
+        </div>
+      </aside>
+
+      <main class="mainpane">
+        <div id="pane-map" class="pane active">
+          <div id="map" class="map"></div>
+        </div>
+
+        <div id="pane-tasks" class="pane hidden"><h2>Tasks</h2><div id="tasksList" class="list"></div></div>
+        <div id="pane-mail" class="pane hidden"><h2>Inbox</h2><div id="mailList" class="list"></div></div>
+        <div id="pane-contacts" class="pane hidden"><h2>Contacts</h2><div id="contactsList" class="list"></div></div>
+        <div id="pane-database" class="pane hidden"><h2>Database (Fictional)</h2><div id="dbList" class="list"></div></div>
+        <div id="pane-control" class="pane hidden">
+          <h2>Control Console</h2>
+          <div class="controls-grid">
+            <div class="control-card">
+              <h3>Deploy Asset</h3>
+              <p>Select an asset and deploy to a mission location.</p>
+              <select id="assetSelect">
+                <option value="drone-recon">Recon Drone</option>
+                <option value="drone-attack">Attack Drone</option>
+                <option value="unit-swat">SWAT Unit</option>
+                <option value="unit-sniper">Sniper Unit</option>
+                <option value="unit-infiltrator">Infiltrator Unit</option>
+                <option value="vehicle-suv">Armored SUV</option>
+                <option value="vehicle-helicopter">Helicopter</option>
+                <option value="plane-fighter">Fighter Jet</option>
+              </select>
+              <button id="deployAssetBtn">DEPLOY</button>
+            </div>
+            <div class="control-card">
+              <h3>Satellite Feed</h3>
+              <p>Live simulated imagery feed.</p>
+              <div class="video-placeholder">[Simulated Feed]<div class="holo-scan"></div></div>
+            </div>
+          </div>
+        </div>
+        <div id="pane-tools" class="pane hidden">
+          <h2>Toolbox</h2>
+          <div class="tools-grid">
+            <div class="tool-card">
+              <h3>Recon Scan</h3><p>Reveal extra details on a selected task.</p>
+              <button data-tool="recon" class="use-tool">LAUNCH SCAN</button>
+              <div class="tool-meta small">Cooldown: <span id="cd-recon">0s</span></div>
+            </div>
+            <div class="tool-card">
+              <h3>Decrypt</h3><p>Decrypt simulated messages (timed).</p>
+              <button data-tool="decrypt" class="use-tool">START DECRYPT</button>
+              <div class="tool-meta small">Cooldown: <span id="cd-decrypt">0s</span></div>
+            </div>
+            <div class="tool-card">
+              <h3>Cyberattack</h3><p>Hack a network via a minigame.</p>
+              <button data-tool="cyberattack" class="use-tool">LAUNCH ATTACK</button>
+              <div class="tool-meta small">Cooldown: <span id="cd-cyberattack">0s</span></div>
+            </div>
+            <div class="tool-card">
+              <h3>Social Engineering</h3><p>Spend influence to auto-complete low-level tasks.</p>
+              <button data-tool="social" class="use-tool">EXECUTE</button>
+              <div class="tool-meta small">Cost: 10 Influence</div>
+            </div>
+            <div class="tool-card">
+              <h3>Phone Hack</h3><p>Simulate hacking a phone to gain intel.</p>
+              <button data-tool="phonehack" class="use-tool">HACK PHONE</button>
+              <div class="tool-meta small">Cooldown: <span id="cd-phonehack">0s</span></div>
+            </div>
+          </div>
+        </div>
+        <div id="pane-settings" class="pane hidden">
+          <h2>Settings</h2>
+          <div class="settings-grid">
+            <label>Agent display name
+              <input id="aliasInput" type="text" maxlength="24" placeholder="Agent Name" />
+            </label>
+            <div class="toggle-row">
+              <label>Sounds</label>
+              <label class="switch"><input id="soundToggle" type="checkbox" checked><span class="slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <label>Vibration (if supported)</label>
+              <label class="switch"><input id="vibToggle" type="checkbox"><span class="slider"></span></label>
+            </div>
+            <label>Reset Progress
+              <button id="resetProgress">Reset</button>
+            </label>
+            <p class="small">All data is stored locally in your browser.</p>
+          </div>
+        </div>
+      </main>
+    </section>
+
+    <div id="overlay" class="overlay hidden">
+      <div id="overlayContent" class="overlay-content"></div>
+    </div>
+    <div id="missionBanner" class="mission-banner hidden"></div>
+    <aside id="notifications" class="notifications hidden"></aside>
+  </main>
+  
+  <audio id="click-sound" src="sounds/click.mp3" preload="auto"></audio>
+  <audio id="login-success-sound" src="sounds/login-success.mp3" preload="auto"></audio>
+  <audio id="login-fail-sound" src="sounds/login-fail.mp3" preload="auto"></audio>
+  <audio id="notification-sound" src="sounds/notification.mp3" preload="auto"></audio>
+  <audio id="alert-critical-sound" src="sounds/alert-critical.mp3" preload="auto"></audio>
+  <audio id="typing-sound" src="sounds/typing.mp3" preload="auto"></audio>
+  <audio id="deploy-success" src="sounds/deploy-success.mp3" preload="auto"></audio>
+  <audio id="mission-complete" src="sounds/mission-complete.mp3" preload="auto"></audio>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(e => console.warn('SW failed', e));
+    }
+  </script>
+</body>
+</html>
